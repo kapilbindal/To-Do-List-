@@ -1,7 +1,10 @@
 package com.example.kapil.test;
 
+import android.database.sqlite.SQLiteDatabase;
+import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,30 +19,41 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.kapil.test.adapter.TaskAdapter;
+import com.example.kapil.test.db.TodoDatabaseHelper;
+import com.example.kapil.test.db.TodoTable;
 import com.example.kapil.test.model.Task;
-
 import java.util.ArrayList;
-import java.util.List;
+
 
 public class MainActivity extends AppCompatActivity {
-    ArrayList<Task> taskList ;
+    private static final String TAG = "s";
+    //ArrayList<Task> taskList ;
     ListView lvTask;
     Button b1;
+    SQLiteDatabase readDb;
+    SQLiteDatabase writeDb;
+    ArrayList<Task> todos;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        taskList = new ArrayList<>();
+        todos = new ArrayList<>();
 
+        TodoDatabaseHelper myDbHelper = new TodoDatabaseHelper(this);
+        writeDb = myDbHelper.getWritableDatabase();
+        readDb = myDbHelper.getReadableDatabase();
         lvTask = findViewById(R.id.lvTask);
-//        final ArrayAdapter<String> taskAdapter = new ArrayAdapter<String>(
-//                this,
-//                android.R.layout.simple_list_item_1,
-//                android.R.id.text1,
-//                Tasks
-//        );
+        //final TaskAdapter taskAdapter = new TaskAdapter(this,todos,writeDb);
         final TaskAdapter taskAdapter = new TaskAdapter();
         lvTask.setAdapter(taskAdapter);
+
+        if(todos != null) {
+            todos = TodoTable.getAllTodos(readDb);
+            taskAdapter.notifyDataSetChanged();
+        }
+
 
         b1 = findViewById(R.id.bt1);
         b1.setOnClickListener(new View.OnClickListener() {
@@ -48,10 +62,9 @@ public class MainActivity extends AppCompatActivity {
                 EditText ed = findViewById(R.id.ed);
                 String data = ed.getText().toString();
                if(!data.isEmpty()){
-                   Task t = new Task();
-                   t.setData(data);
-                   t.setChecked(false);
-                   taskList.add(t);
+                   Task t = new Task(data,false,1);
+                   TodoTable.insertTodo(t,writeDb);
+                   todos.add(t);
                    taskAdapter.notifyDataSetChanged();
                    ed.setText("");
                    Toast.makeText(MainActivity.this, "Task Added" , Toast.LENGTH_SHORT).show();
@@ -67,12 +80,12 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public int getCount() {
-            return taskList.size();
+            return todos.size();
         }
 
         @Override
         public Task getItem(int i) {
-            return taskList.get(i);
+            return todos.get(i);
         }
 
         @Override
@@ -89,28 +102,37 @@ public class MainActivity extends AppCompatActivity {
             ImageView del = taskView.findViewById(R.id.delete);
             CheckBox cb = taskView.findViewById(R.id.ch);
 
-            final Task thisTask = getItem(i);
+            //Log.d(TAG, "getView: " + i);
 
-            del.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    taskList.remove(thisTask);
-                    taskList.trimToSize();
-                    notifyDataSetChanged();
-                }
-            });
+            final Task thisTask = todos.get(i);
             i++;
             tv.setText(thisTask.getData());
             sNo.setText(i + ".  ");
             cb.setChecked(thisTask.getChecked());
+
+            final int finalI1 = i;
+            del.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    todos.remove(thisTask);
+                    todos.trimToSize();
+                    TodoTable.deleteTask(writeDb, finalI1);
+
+                    notifyDataSetChanged();
+                }
+            });
+
+            final int finalI = i;
             cb.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                 @Override
                 public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
                     if(b){
                         thisTask.setChecked(true);
+                        TodoTable.updateTodo(writeDb,true, finalI);
                     }
                     else if(!b){
                         thisTask.setChecked(false);
+                        TodoTable.updateTodo(writeDb,false, finalI);
                     }
                 }
             });

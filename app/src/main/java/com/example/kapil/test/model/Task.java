@@ -9,6 +9,12 @@ public class Task {
     Boolean isChecked;
     int id;
 
+    public Task(String data, Boolean isChecked, int id) {
+        this.data = data;
+        this.isChecked = isChecked;
+        this.id = id;
+    }
+
     public int getId() {
         return id;
     }
