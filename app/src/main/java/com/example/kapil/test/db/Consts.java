@@ -16,5 +16,6 @@ public interface Consts {
     String TYPE_TEXT = " TEXT ";
     String TYPE_BOOLEAN = " BOOLEAN ";
     String TYPE_PK_AI = " PRIMARY KEY AUTOINCREMENT ";
+    //String TYPE_PK = "PRIMARY KEY";
 
 }

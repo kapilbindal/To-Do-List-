@@ -83,6 +83,7 @@ public class MainActivity extends AppCompatActivity {
             return todos.size();
         }
 
+
         @Override
         public Task getItem(int i) {
             return todos.get(i);
@@ -102,8 +103,6 @@ public class MainActivity extends AppCompatActivity {
             ImageView del = taskView.findViewById(R.id.delete);
             CheckBox cb = taskView.findViewById(R.id.ch);
 
-            //Log.d(TAG, "getView: " + i);
-
             final Task thisTask = todos.get(i);
             i++;
             tv.setText(thisTask.getData());
@@ -114,10 +113,11 @@ public class MainActivity extends AppCompatActivity {
             del.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
+                    int thisID = thisTask.getId();
                     todos.remove(thisTask);
                     todos.trimToSize();
-                    TodoTable.deleteTask(writeDb, finalI1);
-
+                    Log.d(TAG, "onClick: " + thisID);
+                    TodoTable.deleteTask(writeDb, thisID);
                     notifyDataSetChanged();
                 }
             });

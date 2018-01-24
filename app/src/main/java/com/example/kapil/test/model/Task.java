@@ -15,6 +15,11 @@ public class Task {
         this.id = id;
     }
 
+    public Task(String data, Boolean isChecked) {
+        this.data = data;
+        this.isChecked = isChecked;
+    }
+
     public int getId() {
         return id;
     }
